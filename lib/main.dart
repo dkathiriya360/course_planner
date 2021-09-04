@@ -95,6 +95,8 @@ class _MyHomePageState extends State<MyHomePage> {
           children: <Widget>[
             Text('Course Planner',
                   style: Theme.of(context).textTheme.headline2,),
+            Text('Username:\nPassword:',
+              style: Theme.of(context).textTheme.headline5,),
             Text(
               'Login Attempts:-',
               style: Theme.of(context).textTheme.headline4,),
