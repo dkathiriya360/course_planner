@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "212592434913",
+    "project_id": "course-planner-56d8d",
+    "storage_bucket": "course-planner-56d8d.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:212592434913:android:cc4a0e6148df35030c61a0",
+        "android_client_info": {
+          "package_name": "edu.cpp.cs4750.dharamk.course_planner"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "212592434913-76bvj20f9nbln6laou0f17jmreih5k44.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCjgAEIp51foPm4p5KKLRanVXovq3zacQw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "212592434913-76bvj20f9nbln6laou0f17jmreih5k44.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

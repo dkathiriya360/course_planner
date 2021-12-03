@@ -1,8 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="edu.cpp.cs4750.dharamk.course_planner">
    <application
-        android:label="course_planner"
-        android:icon="@mipmap/ic_launcher">
+        android:label="Poly Planner"
+        android:icon="@mipmap/launcher_icon">
         <activity
             android:name=".MainActivity"
             android:launchMode="singleTop"

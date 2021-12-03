@@ -1,30 +1,30 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:uuid/uuid.dart';
 
-// Class to add new course
-class CreatePlanner extends StatefulWidget {
-  //const CreatePlanner({Key? key}) : super(key: key);
+// Class to edit the course planner
+class EditPlanner extends StatefulWidget {
+  //const EditPlanner({Key? key}) : super(key: key);
   var plannerDetails;
-  CreatePlanner(this.plannerDetails); // constructor
+  var courseItem;
+  EditPlanner(this.plannerDetails, this.courseItem); // constructor
 
   @override
-  _CreatePlannerState createState() => _CreatePlannerState();
+  _EditPlannerState createState() => _EditPlannerState();
 }
 
-class _CreatePlannerState extends State<CreatePlanner> {
+class _EditPlannerState extends State<EditPlanner> {
   var courseNumberController = TextEditingController();
   var courseNameController = TextEditingController();
   var courseUnitsController = TextEditingController();
   final GlobalKey<FormState> _key = GlobalKey<FormState>();
   final userid = FirebaseAuth.instance.currentUser!.uid; // current user's id
-  var entryID = Uuid(); // unique id for course entry
+  //var entryID = Uuid(); // unique id for course entry
   var plannerList = []; // list of the planner
   String _error = '';
 
-  // Constructor to check any changes to the planner database
+  // constructor to check if the planner if changed or modified
   @override
   void initState() {
     super.initState();
@@ -37,9 +37,12 @@ class _CreatePlannerState extends State<CreatePlanner> {
         .onChildAdded.listen((event) {
       refreshCourseList();
     });
+    FirebaseDatabase.instance.reference().child('users/${userid.toString()}/planner/term-${widget.plannerDetails['entry_key'].toString()}')
+        .onChildRemoved.listen((event) {
+      refreshCourseList();
+    });
   }
-
-  // method to refresh the content and save the modified course list
+  // method to refresh the content
   void refreshCourseList() {
     FirebaseDatabase.instance.reference().child('users/${userid.toString()}/planner/term-${widget.plannerDetails['entry_key'].toString()}/courses')
         .once().then((ds) {
@@ -55,6 +58,46 @@ class _CreatePlannerState extends State<CreatePlanner> {
     });
   }
 
+  // method to check the existence of the course
+  bool checkDuplicateCourse() {
+    bool courseExists = false;
+    bool checkError = false;
+    FirebaseDatabase.instance
+        .reference()
+        .child(
+        'users/${userid.toString()}/planner/term-${widget
+            .plannerDetails['entry_key'].toString()}/courses')
+        .once()
+        .then((ds) {
+      var tempPlannerList = [];
+      ds.value.forEach((k, v) {
+        tempPlannerList.add(v);
+      });
+      plannerList = tempPlannerList;
+      //print(plannerList);
+      setState(() {});
+    }).catchError((error) {
+      print(error);
+      checkError = true;
+    });
+    // check if the course already exists in database
+    if (checkError == false) {
+      for (var i in plannerList) {
+        if (i['courseNumber'] == courseNumberController.text &&
+            i['courseName'] == courseNameController.text &&
+            i['courseUnits'] == courseUnitsController.text) {
+          courseExists = true;
+          setState(() {
+            _error = 'Course already exists!';
+          });
+
+        }
+      }
+    }
+    return courseExists;
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -62,7 +105,7 @@ class _CreatePlannerState extends State<CreatePlanner> {
         //reverse: true,
         child: ConstrainedBox(
           constraints:
-              BoxConstraints(maxHeight: MediaQuery.of(context).size.height),
+          BoxConstraints(maxHeight: MediaQuery.of(context).size.height),
           child: Form(
             key: _key,
             child: SingleChildScrollView(
@@ -81,14 +124,14 @@ class _CreatePlannerState extends State<CreatePlanner> {
                   Container(
                     margin: EdgeInsets.only(top: 10, bottom: 20),
                     child: Text(
-                      'Add Course',
+                      'Edit Course',
                       style: TextStyle(
                           color: Color(0xff297C13),
                           fontSize: 32,
                           fontWeight: FontWeight.bold),
                     ),
                   ),
-                  // take the course number from user and validate the entry
+                  // get updated course number from the user
                   Container(
                     margin: EdgeInsets.only(
                         left: 30, right: 30, top: 10, bottom: 10),
@@ -111,7 +154,7 @@ class _CreatePlannerState extends State<CreatePlanner> {
                       ),
                     ),
                   ),
-                  // take course name from user and validate the entry
+                  // get course name from user
                   Container(
                     margin: EdgeInsets.only(
                         left: 30, right: 30, top: 10, bottom: 10),
@@ -135,8 +178,7 @@ class _CreatePlannerState extends State<CreatePlanner> {
                       ),
                     ),
                   ),
-                  // take number of units from user
-                  // validate the number of units
+                  // get number of units required
                   Container(
                     margin: EdgeInsets.only(
                         left: 30, right: 30, top: 10, bottom: 10),
@@ -145,8 +187,8 @@ class _CreatePlannerState extends State<CreatePlanner> {
                         _error = "";
                         if (value == null || value.isEmpty) {
                           return "Number of units is required!";
-                        } else if (!RegExp(r'^[1-5]$').hasMatch(value)) {
-                          return "Number of units must be between 1-5";
+                        } else if (!RegExp(r'^[1-9]$').hasMatch(value)) {
+                          return "Number of units must be between 1-8";
                         } else
                           return null;
                       }, // validator
@@ -163,7 +205,6 @@ class _CreatePlannerState extends State<CreatePlanner> {
                       ),
                     ),
                   ),
-                  // display error text if error occured
                   Container(
                     // for error text
                     padding: EdgeInsets.only(top: 5, bottom: 5),
@@ -172,8 +213,8 @@ class _CreatePlannerState extends State<CreatePlanner> {
                           style: TextStyle(color: Colors.red, fontSize: 16)),
                     ),
                   ),
-                  // When pressed enter, check the existence of the course.
-                  // display error if course exists, else add it to the planner
+                  // check the existence of the course.
+                  // If course exists, show the error message
                   Container(
                     margin: EdgeInsets.only(top: 5, bottom: 10),
                     width: 200,
@@ -185,7 +226,6 @@ class _CreatePlannerState extends State<CreatePlanner> {
                       ),
                       onPressed: () {
                         if (_key.currentState!.validate()) {
-                          // check for duplicate entry
                           for (var i in plannerList) {
                             if (i['courseNumber'] == courseNumberController.text &&
                                 i['courseName'] == courseNameController.text &&
@@ -195,28 +235,26 @@ class _CreatePlannerState extends State<CreatePlanner> {
                               });
                             }
                           }
-                          // check if course already exists in the database.
+                          // show error message if the course exists
                           if(_error != 'Course already exists!') {
-                            // return to display_details screen and add the course to database
-                            var uniqueCourseID = entryID.v1();
+                            // update the course and return to display_details screen
                             FirebaseDatabase.instance
                                 .reference()
                                 .child(
-                                    'users/${userid.toString()}/planner/term-${widget.plannerDetails['entry_key'].toString()}/courses/${uniqueCourseID.toString()}')
-                                .set({
+                                'users/${userid.toString()}/planner/term-${widget.
+                                plannerDetails['entry_key'].toString()}/courses/${widget.courseItem}')
+                                .update({
                               'courseNumber': courseNumberController.text,
                               'courseName': courseNameController.text,
                               'courseUnits': courseUnitsController.text,
-                              'courseID': uniqueCourseID.toString()
                             }).then((value) {
+                              Navigator.pop(context); // return to planner_details page
                               // show message on SnackBar
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
-                                  backgroundColor:  Color(0xff48638f),
+                                  backgroundColor: Color(0xff48638f),
                                     content: Text(
-                                        'Course successfully added to planner!',
-                                    style: TextStyle(fontSize: 16))
-                                ),
+                                        'Course successfully updated!', style: TextStyle(fontSize: 16),)),
                               );
                               courseNumberController.clear();
                               courseNameController.clear();
