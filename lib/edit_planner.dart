@@ -74,7 +74,6 @@ class _EditPlannerState extends State<EditPlanner> {
         tempPlannerList.add(v);
       });
       plannerList = tempPlannerList;
-      //print(plannerList);
       setState(() {});
     }).catchError((error) {
       print(error);
